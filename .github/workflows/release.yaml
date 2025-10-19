@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch for release"
+        required: true
+        default: "master"
+      tag_name:
+        description: "Tag name to use for the release"
+        required: true
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 1  # last commit. Change to 0 to get all git history
+
+      - name: Create zip with two files
+        run: |
+          zip -r "release_${{ github.event.inputs.tag_name}}.zip" ArduinoAndESP32/Libraries/RumiCar
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name }}
+          name: Release ${{ github.event.inputs.tag_name }}
+          files: release_${{ github.event.inputs.tag_name}}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
